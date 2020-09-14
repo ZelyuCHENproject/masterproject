@@ -1,2 +1,2 @@
 # masterproject
-arm_project is the main code
+aarm_robot is the main code
