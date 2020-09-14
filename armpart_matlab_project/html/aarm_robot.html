@@ -1,0 +1,447 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>aarm_robot</title><meta name="generator" content="MATLAB 9.7"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2020-09-14"><meta name="DC.source" content="aarm_robot.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">main loop</a></li><li><a href="#8">read the image</a></li><li><a href="#9">put position</a></li></ul></div><pre class="codeinput">clc;clear;close <span class="string">all</span>
+load <span class="string">AQQQQ</span>
+run <span class="string">API_connect_the_vrep.m</span>
+</pre><pre class="codeoutput">Program started
+Note: always make sure you use the corresponding remoteApi library
+(i.e. 32bit Matlab will not work with 64bit remoteApi, and vice-versa)
+</pre><h2 id="2">main loop</h2><pre class="codeinput"><span class="keyword">if</span> (clientID&gt;-1)
+</pre><pre class="codeinput">    disp(<span class="string">'Connected to remote API server'</span>);
+
+    <span class="comment">% Now try to retrieve data in a blocking fashion (i.e. a service call):</span>
+    [res,objs]=vrep.simxGetObjects(clientID,vrep.sim_handle_all,vrep.simx_opmode_blocking);
+    <span class="keyword">if</span> (res==vrep.simx_return_ok)
+        fprintf(<span class="string">'Number of objects in the scene: %d\n'</span>,length(objs));
+    <span class="keyword">else</span>
+        fprintf(<span class="string">'Remote API function call returned with error code: %d\n'</span>,res);
+    <span class="keyword">end</span>
+
+    run <span class="string">Initial_setting.m</span>
+
+
+    disp(<span class="string">'initial setting has been implemented'</span>)
+</pre><h2 id="8">read the image</h2><pre class="codeinput">    block_real_size=[0.07 0.07]; <span class="comment">% real size 0.07m 0.07m</span>
+    blockHeight=0.07; <span class="comment">%block real height 0.07m</span>
+    [im, props] = blockBoundingBox(matrix_image);
+    [block_position_real0]=objectfinder(block_real_size,im,props); <span class="comment">% position of block</span>
+
+
+    load <span class="string">alp.mat</span>
+    block_position_real0=block_position_real0(inShape(alp,[block_position_real0,0.07*ones(size(block_position_real0,1),1)]),:);
+    num_blk=size(block_position_real0,1);
+
+    <span class="keyword">for</span> Np=1:num_blk
+        ver_b(Np,:)=vecnorm(block_position_real0(Np,:));
+    <span class="keyword">end</span>
+
+   [ver_k,ver_l]=sort(ver_b);
+
+   block_position_real0=block_position_real0(ver_l,:);
+
+
+
+
+
+    <span class="comment">%     putPosition0=random_get(0.005); % random get a put position in an a area</span>
+</pre><h2 id="9">put position</h2><pre>   putPosition0=[0,-0.35,0.005];</pre><pre>   Mn=1;
+   while Mn&lt;=num_blk</pre><pre>       if norm(putPosition0(:,1:2)-block_position_real0(Mn,:))&lt;=0.15*2^0.5
+           putPosition0=random_get(0.005);
+           Mn=1;
+       else
+           Mn=Mn+1;
+       end</pre><pre>   end</pre><pre class="codeinput">    <span class="keyword">for</span> Nn=1:num_blk
+
+         put_position=[0 0.4 ;0 0.33 ; 0 0.27];
+
+<span class="comment">%         put_position=AQQQQ(34,:);</span>
+
+        block_position_real=block_position_real0(Nn,:);
+
+        save(<span class="string">'block_position_real.mat'</span>,<span class="string">'block_position_real'</span>);
+
+        <span class="comment">%         putPosition=[putPosition0(1),putPosition0(2),putPosition0(3)+(Nn-1)*blockHeight*1.2];</span>
+
+        [posefile,Hingeposefile]=armpose_computer(blockHeight,block_position_real,Nn,put_position);
+
+        <span class="keyword">if</span> isempty(posefile)==1 || isempty(Hingeposefile)==1
+
+
+
+        <span class="keyword">else</span>
+</pre><pre class="codeinput">            load(posefile);
+            load(Hingeposefile);
+
+            Hingepose=posedegredu(Hingepose);
+
+            save(<span class="string">'Hingeposeredu.mat'</span>,<span class="string">'Hingepose'</span>);
+
+            disp(<span class="string">'path has been computed'</span>)
+
+
+            run <span class="string">Hingeposesetting.m</span>
+            run <span class="string">open_the_gripper.m</span>
+
+            run <span class="string">Apply_on_robot.m</span>
+
+            pause(6);
+
+            run <span class="string">close_the_gripper.m</span>
+
+            pause(6);
+
+            run <span class="string">back_to_original_pose.m</span>
+
+            disp(<span class="string">'The block has been grabbed'</span>)
+</pre><pre class="codeinput">            n_coll=1;
+            <span class="keyword">for</span> N_coll=block_CC
+                [res,collisionState]=vrep.simxReadCollision(clientID,N_coll,vrep.simx_opmode_blocking);
+                <span class="keyword">if</span> collisionState&gt;0
+                    block_num=n_coll;
+                    blockOO=block_CC(:,n_coll);
+                    block_CC=setdiff(block_CC,block_CC(:,n_coll));
+                <span class="keyword">end</span>
+                n_coll=n_coll+1;
+            <span class="keyword">end</span>
+
+
+            [posefile_put,Hingeposefile_put]=armpose_computer_put(blockHeight,block_position_real,Nn,put_position);
+
+            <span class="keyword">if</span> isempty(posefile_put)==1 || isempty(Hingeposefile_put)==1
+
+
+            <span class="keyword">else</span>
+
+                load(posefile_put);
+                load(Hingeposefile_put);
+
+                Hingepose=posedegredu(Hingepose);
+
+                save(<span class="string">'Hingeposeredu.mat'</span>,<span class="string">'Hingepose'</span>);
+
+                disp(<span class="string">'path has been computed'</span>)
+
+                run <span class="string">Hingeposesetting.m</span>
+
+                run <span class="string">Apply_on_robot.m</span>
+
+                pause(6);
+
+                run <span class="string">open_the_gripper.m</span>
+
+                pause(6);
+
+
+
+                run <span class="string">not_dynamic.m</span>
+                run <span class="string">back_to_original_pose.m</span>
+
+
+            <span class="keyword">end</span>
+
+
+
+            disp(<span class="string">'Has been put on the position'</span>)
+</pre><pre class="codeinput">        <span class="keyword">end</span>
+
+    <span class="keyword">end</span>
+
+
+[res,a1positionblock3]=vrep.simxGetObjectPosition(clientID,block3, -1 ,vrep.simx_opmode_blocking);
+<span class="comment">% [res,a1positionblock5]=vrep.simxGetObjectPosition(clientID,block5, -1 ,vrep.simx_opmode_blocking);</span>
+<span class="comment">% [res,a1positionblock8]=vrep.simxGetObjectPosition(clientID,block8, -1 ,vrep.simx_opmode_blocking);</span>
+[res,a1positionblock9]=vrep.simxGetObjectPosition(clientID,block9, -1 ,vrep.simx_opmode_blocking);
+<span class="comment">% [res,a1positionblock6]=vrep.simxGetObjectPosition(clientID,block6, -1 ,vrep.simx_opmode_blocking);</span>
+<span class="comment">% [res,a1positionblock1]=vrep.simxGetObjectPosition(clientID,block1, -1 ,vrep.simx_opmode_blocking);</span>
+[res,a1positionblock2]=vrep.simxGetObjectPosition(clientID,block2, -1 ,vrep.simx_opmode_blocking);
+<span class="comment">% [res,a1positionblock4]=vrep.simxGetObjectPosition(clientID,block4, -1 ,vrep.simx_opmode_blocking);</span>
+[res,a1positionblock7]=vrep.simxGetObjectPosition(clientID,block7, -1 ,vrep.simx_opmode_blocking);
+
+a1a=[a1positionblock3(1:2),a1positionblock3(3)
+<span class="comment">%     a1positionblock5(1:2),a1positionblock5(3)</span>
+<span class="comment">%     a1positionblock8(1:2),a1positionblock8(3)</span>
+    a1positionblock9(1:2),a1positionblock9(3)
+<span class="comment">%     a1positionblock6(1:2),a1positionblock6(3)</span>
+<span class="comment">%     a1positionblock1(1:2),a1positionblock1(3)</span>
+    a1positionblock2(1:2),a1positionblock2(3)
+<span class="comment">%     a1positionblock4(1:2),a1positionblock4(3)</span>
+    a1positionblock7(1:2),a1positionblock7(3)];
+a1a=sortrows(a1a,3);
+
+a1a=[(a1a(:,2)+0.2630) , -(a1a(:,1)+0.00002), a1a(:,3)];
+</pre><pre class="codeinput"><span class="keyword">else</span>
+    disp(<span class="string">'Failed connecting to remote API server'</span>);
+<span class="keyword">end</span>
+vrep.delete(); <span class="comment">% call the destructor!</span>
+<span class="comment">%</span>
+disp(<span class="string">'Program ended'</span>);
+</pre><pre class="codeoutput">Failed connecting to remote API server
+Program ended
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+
+clc;clear;close all
+load AQQQQ
+run API_connect_the_vrep.m
+%%
+%% main loop
+%%
+if (clientID>-1)
+    
+    disp('Connected to remote API server');
+    
+    % Now try to retrieve data in a blocking fashion (i.e. a service call):
+    [res,objs]=vrep.simxGetObjects(clientID,vrep.sim_handle_all,vrep.simx_opmode_blocking);
+    if (res==vrep.simx_return_ok)
+        fprintf('Number of objects in the scene: %d\n',length(objs));
+    else
+        fprintf('Remote API function call returned with error code: %d\n',res);
+    end
+    
+    run Initial_setting.m
+    
+    
+    disp('initial setting has been implemented')
+    
+    %%
+    %%
+    %%
+    %% read the image
+    block_real_size=[0.07 0.07]; % real size 0.07m 0.07m
+    blockHeight=0.07; %block real height 0.07m
+    [im, props] = blockBoundingBox(matrix_image);
+    [block_position_real0]=objectfinder(block_real_size,im,props); % position of block
+   
+    
+    load alp.mat
+    block_position_real0=block_position_real0(inShape(alp,[block_position_real0,0.07*ones(size(block_position_real0,1),1)]),:);
+    num_blk=size(block_position_real0,1);
+    
+    for Np=1:num_blk
+        ver_b(Np,:)=vecnorm(block_position_real0(Np,:));
+    end
+    
+   [ver_k,ver_l]=sort(ver_b);
+   
+   block_position_real0=block_position_real0(ver_l,:);
+   
+
+   
+ 
+   
+    %     putPosition0=random_get(0.005); % random get a put position in an a area
+    
+    %% put position
+    %     putPosition0=[0,-0.35,0.005];
+    %
+    %     Mn=1;
+    %     while Mn<=num_blk
+    %
+    %         if norm(putPosition0(:,1:2)-block_position_real0(Mn,:))<=0.15*2^0.5
+    %             putPosition0=random_get(0.005);
+    %             Mn=1;
+    %         else
+    %             Mn=Mn+1;
+    %         end
+    %
+    %     end
+    
+    %%
+    for Nn=1:num_blk
+        
+         put_position=[0 0.4 ;0 0.33 ; 0 0.27];
+        
+%         put_position=AQQQQ(34,:);
+        
+        block_position_real=block_position_real0(Nn,:);
+        
+        save('block_position_real.mat','block_position_real');
+        
+        %         putPosition=[putPosition0(1),putPosition0(2),putPosition0(3)+(Nn-1)*blockHeight*1.2];
+        
+        [posefile,Hingeposefile]=armpose_computer(blockHeight,block_position_real,Nn,put_position);
+        
+        if isempty(posefile)==1 || isempty(Hingeposefile)==1
+            
+            
+            
+        else
+            load(posefile);
+            load(Hingeposefile);
+            
+            Hingepose=posedegredu(Hingepose);
+            
+            save('Hingeposeredu.mat','Hingepose');
+            
+            disp('path has been computed')
+            
+            
+            run Hingeposesetting.m
+            run open_the_gripper.m
+            
+            run Apply_on_robot.m
+            
+            pause(6);
+            
+            run close_the_gripper.m
+            
+            pause(6);
+            
+            run back_to_original_pose.m
+            
+            disp('The block has been grabbed')
+            
+            
+            %%
+            n_coll=1;
+            for N_coll=block_CC
+                [res,collisionState]=vrep.simxReadCollision(clientID,N_coll,vrep.simx_opmode_blocking);
+                if collisionState>0
+                    block_num=n_coll;
+                    blockOO=block_CC(:,n_coll);
+                    block_CC=setdiff(block_CC,block_CC(:,n_coll));
+                end
+                n_coll=n_coll+1;
+            end
+            
+            
+            [posefile_put,Hingeposefile_put]=armpose_computer_put(blockHeight,block_position_real,Nn,put_position);
+            
+            if isempty(posefile_put)==1 || isempty(Hingeposefile_put)==1
+                
+                
+            else
+                
+                load(posefile_put);
+                load(Hingeposefile_put);
+                
+                Hingepose=posedegredu(Hingepose);
+                
+                save('Hingeposeredu.mat','Hingepose');
+                
+                disp('path has been computed')
+                
+                run Hingeposesetting.m
+                
+                run Apply_on_robot.m
+                
+                pause(6);
+                
+                run open_the_gripper.m
+                
+                pause(6);
+                
+                
+                
+                run not_dynamic.m
+                run back_to_original_pose.m
+                                 
+                
+            end
+            
+            
+            
+            disp('Has been put on the position')
+            
+        end
+        
+    end
+    
+    
+[res,a1positionblock3]=vrep.simxGetObjectPosition(clientID,block3, -1 ,vrep.simx_opmode_blocking);
+% [res,a1positionblock5]=vrep.simxGetObjectPosition(clientID,block5, -1 ,vrep.simx_opmode_blocking);
+% [res,a1positionblock8]=vrep.simxGetObjectPosition(clientID,block8, -1 ,vrep.simx_opmode_blocking);
+[res,a1positionblock9]=vrep.simxGetObjectPosition(clientID,block9, -1 ,vrep.simx_opmode_blocking);
+% [res,a1positionblock6]=vrep.simxGetObjectPosition(clientID,block6, -1 ,vrep.simx_opmode_blocking);
+% [res,a1positionblock1]=vrep.simxGetObjectPosition(clientID,block1, -1 ,vrep.simx_opmode_blocking);
+[res,a1positionblock2]=vrep.simxGetObjectPosition(clientID,block2, -1 ,vrep.simx_opmode_blocking);
+% [res,a1positionblock4]=vrep.simxGetObjectPosition(clientID,block4, -1 ,vrep.simx_opmode_blocking);
+[res,a1positionblock7]=vrep.simxGetObjectPosition(clientID,block7, -1 ,vrep.simx_opmode_blocking);
+
+a1a=[a1positionblock3(1:2),a1positionblock3(3)
+%     a1positionblock5(1:2),a1positionblock5(3)
+%     a1positionblock8(1:2),a1positionblock8(3)
+    a1positionblock9(1:2),a1positionblock9(3)
+%     a1positionblock6(1:2),a1positionblock6(3)
+%     a1positionblock1(1:2),a1positionblock1(3)
+    a1positionblock2(1:2),a1positionblock2(3)
+%     a1positionblock4(1:2),a1positionblock4(3)
+    a1positionblock7(1:2),a1positionblock7(3)];
+a1a=sortrows(a1a,3);
+
+a1a=[(a1a(:,2)+0.2630) , -(a1a(:,1)+0.00002), a1a(:,3)];
+    %%
+else
+    disp('Failed connecting to remote API server');
+end
+vrep.delete(); % call the destructor!
+%
+disp('Program ended');
+##### SOURCE END #####
+--></body></html>
